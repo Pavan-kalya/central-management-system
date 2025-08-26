@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GenAI Front-End</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">MedSecure Health Systems</div>
+        <nav>
+            <ul class="menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/chat">Chat</a></li>
+                <li><a href="/anonymize_data">Anonymize Data</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <h2>GenAI Front-End Application</h2>
+        <textarea id="prompt" placeholder="Enter your question..."></textarea>
+        <button onclick="sendPrompt()">Ask</button>
+        <div id="response"></div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
