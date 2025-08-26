@@ -1,11 +1,11 @@
 import os, re, json
 from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
+import config 
 
 app = Flask(__name__)
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=config.OPENAI_API_KEY)
 
 # ---- 1. Extract PHI using GPT-4 ----
 def extract_phi(text):
@@ -103,4 +103,4 @@ def index():
                            compliance_result=compliance_result)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True)
