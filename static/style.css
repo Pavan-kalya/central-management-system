@@ -106,3 +106,15 @@ button:hover {
     background: #eef;
     border-radius: 5px;
 }
+
+.logout-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.logout-btn:hover {
+  background-color: #c0392b;
+}

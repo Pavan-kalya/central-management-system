@@ -1,3 +1,5 @@
 flask
 openai
 gunicorn
+flask_login
+mysql-connector-python
