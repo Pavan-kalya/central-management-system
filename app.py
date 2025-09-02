@@ -3,11 +3,12 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from openai import OpenAI
 import mysql.connector
+import config
 
 app = Flask(__name__)
 app.secret_key = 'yoursecret'
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=config.OPENAI_API_KEY)
 
 # ------------------- LOGIN MANAGER -------------------
 login_manager = LoginManager()
