@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patients Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='patients.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <div class="patient-container">
+        <h2>Patients Portal</h2>
+        <p>Please choose an option:</p>
+
+        <div class="patient-options">
+            <a href="{{ url_for('register') }}" class="patient-btn">Register a Patient</a>
+            <a href="{{ url_for('view') }}" class="patient-btn">View a Patient</a>
+        </div>
+    </div>
+</body>
+</html>

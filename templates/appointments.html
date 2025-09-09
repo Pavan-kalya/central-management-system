@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedSecure Health Systems</title>
+    <link rel="stylesheet" href="/static/style.css">
+   <link rel="stylesheet" href="{{ url_for('static', filename='patients.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+    {% block content %}
+    <div class="form-card">
+        <h3>Appointments for Patient ID: {{ patient_id }}</h3>
+
+        {% if appointments %}
+            {% for appt in appointments %}
+            <div class="list-card">
+                <p><strong>Appointment ID:</strong> {{ appt.id }}</p>
+                <p><strong>Date:</strong> {{ appt.appointment_date }}</p>
+                <p><strong>Time:</strong> {{ appt.appointment_time }}</p>
+                <p><strong>Doctor:</strong> {{ appt.doctor_name }}</p>
+                <p><strong>Department:</strong> {{ appt.department_name }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:red; margin-top:1rem;">No appointments found for this patient.</p>
+        {% endif %}
+    </div>
+    {% endblock %}
+</body>
+</html>

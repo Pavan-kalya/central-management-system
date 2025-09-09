@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Patient</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='patients.css') }}">
+  <link rel="stylesheet" href="/static/form.css">
+  
+</head>
+<body>
+  {% include 'header.html' %}
+  
+  <div class="form-card">
+    <h3>View Patient</h3>
+    <form method="POST">
+      <div class="form-group">
+        <label for="patient_id">Enter Patient ID</label>
+        <input type="number" id="patient_id" name="patient_id" required>
+      </div>
+      <button type="submit" class="btn-submit">Search</button>
+    </form>
+
+    {% if patient %}
+    <div class="patient-details">
+      <h4>Patient Details</h4>
+      <p><strong>ID:</strong> {{ patient.id }}</p>
+      <p><strong>Name:</strong> {{ patient.name }}</p>
+      <p><strong>Date of Birth:</strong> {{ patient.dob }}</p>
+      <p><strong>Gender:</strong> {{ patient.gender }}</p>
+      <p><strong>Contact:</strong> {{ patient.contact_number }}</p>
+      <p><strong>Email:</strong> {{ patient.email }}</p>
+      <p><strong>Address:</strong> {{ patient.address }}</p>
+      <p><strong>Created At:</strong> {{ patient.created_at }}</p>
+
+      <!-- Action buttons -->
+      <div class="action-buttons">
+        <div class="action-buttons">
+        <a href="{{ url_for('view_appointments', patient_id=patient.id) }}" class="patient-btn">View Appointments</a>
+        <a href="{{ url_for('view_records', patient_id=patient.id) }}" class="patient-btn">View Records</a>
+        <a href="{{ url_for('book_appointment') }}" class="patient-btn">Book Appointment</a>
+        <a href="{{ url_for('upload_record') }}" class="patient-btn">Upload Record</a>
+      </div>
+    </div>
+    {% elif patient is none and request.method == "POST" %}
+      <p style="color:red; margin-top:1rem;">No patient found with that ID.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>

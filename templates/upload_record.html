@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patients Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='patients.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <div class="form-card">
+        <h3>Upload Patient Record</h3>
+        <form method="POST" enctype="multipart/form-data">
+            
+            <div class="form-group">
+            <label for="patient_id">Patient ID</label>
+            <input type="number" id="patient_id" name="patient_id" required>
+            </div>
+
+            <div class="form-group">
+            <label for="record_type">Record Type</label>
+            <select id="record_type" name="record_type" required>
+                <option value="">-- Select Record Type --</option>
+                <option value="Prescription">Prescription</option>
+                <option value="Lab Report">Lab Report</option>
+                <option value="X-Ray">X-Ray</option>
+                <option value="MRI">MRI</option>
+                <option value="Other">Other</option>
+            </select>
+            </div>
+
+            <div class="form-group">
+            <label for="file">Attach Document</label>
+            <input type="file" id="file" name="file" required>
+            </div>
+
+            <button type="submit" class="btn-submit">Upload Record</button>
+        </form>
+    </div>
+
+</body>
+</html>

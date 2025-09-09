@@ -1,0 +1,16 @@
+<header>
+    <div class="logo">MedSecure Health Systems</div>
+    <nav>
+        <ul class="menu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/chat">Chat</a></li>
+            <li><a href="/anonymize_data">Anonymize Data</a></li>
+            <li><a href="/patients">Patients</a></li>
+            <li>
+                <form action="{{ url_for('logout') }}" method="post" style="display:inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </li>
+        </ul>
+    </nav>
+</header>

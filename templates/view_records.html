@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patients Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='patients.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    {% block content %}
+    <div class="form-card">
+    {% if patient %}
+        <div class="patient-card">
+        <h3>Patient Details</h3>
+        <p><strong>ID:</strong> {{ patient.id }}</p>
+        <p><strong>Name:</strong> {{ patient.name }}</p>
+        <p><strong>Date of Birth:</strong> {{ patient.dob }}</p>
+        <p><strong>Gender:</strong> {{ patient.gender }}</p>
+        <p><strong>Contact:</strong> {{ patient.contact_number }}</p>
+        <p><strong>Email:</strong> {{ patient.email }}</p>
+        <p><strong>Address:</strong> {{ patient.address }}</p>
+        </div>
+
+        <div class="records-card">
+        <h3>Patient Records</h3>
+        {% if records %}
+            <ul class="records-list">
+            {% for record in records %}
+                <li>
+                <span class="record-type">{{ record.record_type }}</span>
+                <a href="{{ record.blob_url }}" target="_blank" class="record-link">📄 View Document</a>
+                <span class="record-date">{{ record.uploaded_at }}</span>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No records found for this patient.</p>
+        {% endif %}
+        </div>
+    {% else %}
+        <p style="color: red;">No patient found with this ID.</p>
+    {% endif %}
+    </div>
+    {% endblock %}
+
+</body>
+</html>

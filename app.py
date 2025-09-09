@@ -1,9 +1,11 @@
-import os, re, json, logging, mysql.connector
+import re, json, mysql.connector
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from azure.storage.blob import BlobServiceClient
 from openai import OpenAI
 import mysql.connector
 import config
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'yoursecret'
@@ -27,6 +29,11 @@ DB_CONFIG = {
 
 cnx = mysql.connector.connect(**DB_CONFIG)
 cursor = cnx.cursor()
+
+AZURE_STORAGE_CONNECTION_STRING = config.AZURE_BLOB_CONNECTION_STRING
+CONTAINER_NAME = "patient-records"
+blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+
 
 class User(UserMixin):
     def __init__(self, id, username, role, hashed_password):
@@ -107,7 +114,8 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE username=%s AND hashed_password=%s", (username, password))
         user_row = cursor.fetchone()
         print(user_row)
@@ -189,6 +197,194 @@ def anonymize_data():
                            original_text=original_text,
                            anonymized_text=anonymized_text,
                            compliance_result=compliance_result)
+
+@app.route("/patients")
+def patients():
+    return render_template("patients.html")
+
+@app.route("/register_patient", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form["name"]
+        dob = request.form["dob"]
+        gender = request.form["gender"]
+        contact_number = request.form["contact_number"]
+        email = request.form["email"]
+        address = request.form["address"]
+
+        try:
+            cnx = mysql.connector.connect(**DB_CONFIG)
+            cursor = cnx.cursor()
+            query = """INSERT INTO patients (name, dob, gender, contact_number, email, address)
+                       VALUES (%s, %s, %s, %s, %s, %s)"""
+            cursor.execute(query, (name, dob, gender, contact_number, email, address))
+            cnx.commit()
+
+            patient_id = cursor.lastrowid
+        except mysql.connector.Error as err:
+            return render_template("register_patient.html", error=str(err))
+        finally:
+            cursor.close()
+            cnx.close()
+
+        return render_template("register_patient.html", success=True, patient_id=patient_id)
+
+    return render_template("register_patient.html")
+
+
+@app.route("/view_patient", methods=["GET", "POST"])
+def view():
+    patient_data = None
+    if request.method == "POST":
+        patient_id = request.form["patient_id"]
+
+        try:
+            cnx = mysql.connector.connect(**DB_CONFIG)
+            cursor = cnx.cursor(dictionary=True)
+            query = "SELECT * FROM patients WHERE id = %s"
+            cursor.execute(query, (patient_id,))
+            patient_data = cursor.fetchone()
+        except mysql.connector.Error as err:
+            flash(f"Database error: {err}", "danger")
+        finally:
+            cursor.close()
+            cnx.close()
+
+    return render_template("view_patient.html", patient=patient_data)
+
+@app.route("/book_appointment", methods=["GET", "POST"])
+def book_appointment():
+    try:
+        cnx = mysql.connector.connect(**DB_CONFIG)
+        cursor = cnx.cursor(dictionary=True)
+
+        # Fetch departments and doctors
+        cursor.execute("SELECT id, name FROM departments")
+        departments = cursor.fetchall()
+
+        cursor.execute("SELECT id, name FROM doctors")
+        doctors = cursor.fetchall()
+
+        cursor.close()
+        cnx.close()
+    except mysql.connector.Error as err:
+        flash(f"Database error: {err}", "danger")
+        departments, doctors = [], []
+
+    if request.method == "POST":
+        patient_id = request.form["patient_id"]
+        department_id = request.form["department_id"]
+        doctor_id = request.form["doctor_id"]
+        appointment_date = request.form["appointment_date"]
+        appointment_time = request.form["appointment_time"]
+
+        try:
+            cnx = mysql.connector.connect(**DB_CONFIG)
+            cursor = cnx.cursor()
+            query = """INSERT INTO appointments 
+                       (patient_id, department_id, doctor_id, appointment_date, appointment_time) 
+                       VALUES (%s, %s, %s, %s, %s)"""
+            cursor.execute(query, (patient_id, department_id, doctor_id, appointment_date, appointment_time))
+            cnx.commit()
+            flash("Appointment booked successfully!", "success")
+        except mysql.connector.Error as err:
+            flash(f"Database error: {err}", "danger")
+        finally:
+            cursor.close()
+            cnx.close()
+
+        return redirect(url_for("book_appointment"))
+
+    return render_template("book_appointment.html", departments=departments, doctors=doctors)
+
+@app.route("/view_appointments/<int:patient_id>")
+def view_appointments(patient_id):
+    try:
+        cnx = mysql.connector.connect(**DB_CONFIG)
+        cursor = cnx.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT a.id, a.appointment_date, a.appointment_time, d.name as doctor_name, dept.name as department_name "
+            "FROM appointments a "
+            "JOIN doctors d ON a.doctor_id = d.id "
+            "JOIN departments dept ON a.department_id = dept.id "
+            "WHERE a.patient_id = %s", (patient_id,)
+        )
+        appointments = cursor.fetchall()
+    except mysql.connector.Error as err:
+        appointments = []
+        flash(f"Database error: {err}", "danger")
+    finally:
+        cursor.close()
+        cnx.close()
+
+    return render_template("appointments.html", appointments=appointments, patient_id=patient_id)
+
+@app.route("/upload_record", methods=["GET", "POST"])
+def upload_record():
+    if request.method == "POST":
+        patient_id = request.form["patient_id"]
+        record_type = request.form["record_type"]
+        file = request.files["file"]
+
+        if not file:
+            flash("Please select a file to upload", "danger")
+            return redirect(request.url)
+
+        cnx = mysql.connector.connect(**DB_CONFIG)
+        cursor = cnx.cursor()
+
+        try:
+            # Upload file to Azure Blob
+            blob_name = f"{patient_id}_{uuid.uuid4()}_{file.filename}"
+            blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
+            blob_client.upload_blob(file, overwrite=True)
+
+            # Generate blob URL
+            blob_url = blob_client.url
+
+            # Insert into DB
+            
+            query = """INSERT INTO patient_records (patient_id, record_type, blob_url) 
+                       VALUES (%s, %s, %s)"""
+            cursor.execute(query, (patient_id, record_type, blob_url))
+            cnx.commit()
+
+            flash("Record uploaded successfully!", "success")
+
+        except Exception as e:
+            print(f"Error uploading record: {e}", "danger")
+        finally:
+            cursor.close()
+            cnx.close()
+
+        return redirect(url_for("upload_record"))
+
+    return render_template("upload_record.html")
+
+@app.route("/view_records/<int:patient_id>")
+def view_records(patient_id):
+    try:
+        cnx = mysql.connector.connect(**DB_CONFIG)
+        cursor = cnx.cursor(dictionary=True)
+
+        # Fetch patient details
+        cursor.execute("SELECT * FROM patients WHERE id = %s", (patient_id,))
+        patient = cursor.fetchone()
+
+        # Fetch patient records
+        cursor.execute(
+            "SELECT id, record_type, blob_url, uploaded_at FROM patient_records WHERE patient_id = %s ORDER BY uploaded_at DESC",
+            (patient_id,),
+        )
+        records = cursor.fetchall()
+
+        cursor.close()
+        cnx.close()
+    except mysql.connector.Error as err:
+        flash(f"Database error: {err}", "danger")
+        patient, records = None, []
+
+    return render_template("view_records.html", patient=patient, records=records)
 
 if __name__ == "__main__":
     app.run(debug=True)
