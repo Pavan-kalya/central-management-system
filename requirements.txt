@@ -3,3 +3,4 @@ openai
 gunicorn
 flask_login
 mysql-connector-python
+azure-storage-blob
