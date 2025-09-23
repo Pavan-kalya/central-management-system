@@ -4,14 +4,14 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from azure.storage.blob import BlobServiceClient
 from openai import OpenAI
 import mysql.connector
-import config
 import uuid
+from support import *
+import os
 
 app = Flask(__name__)
 app.secret_key = 'yoursecret'
 
-client = OpenAI(api_key=config.OPENAI_API_KEY)
-
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
 # ------------------- LOGIN MANAGER -------------------
 login_manager = LoginManager()
 login_manager.login_view = "login"
@@ -30,7 +30,7 @@ DB_CONFIG = {
 cnx = mysql.connector.connect(**DB_CONFIG)
 cursor = cnx.cursor()
 
-AZURE_STORAGE_CONNECTION_STRING = config.AZURE_BLOB_CONNECTION_STRING
+AZURE_STORAGE_CONNECTION_STRING = os.environ.get("AZURE_BLOB_CONNECTION_STRING", "")
 CONTAINER_NAME = "patient-records"
 blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 
@@ -177,7 +177,25 @@ def ask():
         return jsonify({"response": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+@app.route("/agent_chat")
+def agent_chat():
+    return render_template("agent_chat.html")
+
+@app.route("/agent_ask", methods=["POST"])
+def agent_ask():
+    user_input = request.json.get("prompt", "")
+    if not user_input:
+        return jsonify({"error": "Prompt required"}), 400
+
+    try:
+        cnx = mysql.connector.connect(**DB_CONFIG)
+        response = agentic_query(client, cnx, user_input)
+        return jsonify({"response": response})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/anonymize_data", methods=["GET", "POST"])
 def anonymize_data():
     original_text = anonymized_text = compliance_result = ""

@@ -1,2 +1,0 @@
-OPENAI_API_KEY = "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"
-AZURE_BLOB_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=medsecureappstorage;AccountKey=aObgpKzncIVPAAPmUfmcKBypgp8Z/1lcL1gOxNNQ2GiNwUO5UFV04RfV0ingiGmHMJSjDNO+g3P9+ASts7pMSA==;EndpointSuffix=core.windows.net"
