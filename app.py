@@ -144,7 +144,8 @@ def chat():
 @app.route("/ask", methods=["POST"])
 def ask():
     user_input = request.json.get("prompt", "").strip()
-
+    cnx = mysql.connector.connect(**DB_CONFIG)
+    cursor = cnx.cursor()
     # -------- Validation --------
     if not user_input:
         return jsonify({"error": "Prompt cannot be empty"}), 400
