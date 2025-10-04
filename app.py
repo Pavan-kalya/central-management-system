@@ -254,14 +254,24 @@ def register():
 def view():
     patient_data = None
     if request.method == "POST":
-        patient_id = request.form["patient_id"]
+        patient_id = request.form.get("patient_id")
+        name = request.form.get("name")
+        dob = request.form.get("dob")
 
         try:
             cnx = mysql.connector.connect(**DB_CONFIG)
             cursor = cnx.cursor(dictionary=True)
-            query = "SELECT * FROM patients WHERE id = %s"
-            cursor.execute(query, (patient_id,))
-            patient_data = cursor.fetchone()
+
+            if patient_id:  # search by ID
+                query = "SELECT * FROM patients WHERE id = %s"
+                cursor.execute(query, (patient_id,))
+                patient_data = cursor.fetchone()
+
+            elif name and dob:  # search by name + DOB
+                query = "SELECT * FROM patients WHERE name = %s AND dob = %s"
+                cursor.execute(query, (name, dob))
+                patient_data = cursor.fetchone()
+
         except mysql.connector.Error as err:
             flash(f"Database error: {err}", "danger")
         finally:
@@ -269,6 +279,7 @@ def view():
             cnx.close()
 
     return render_template("view_patient.html", patient=patient_data)
+
 
 @app.route("/book_appointment", methods=["GET", "POST"])
 def book_appointment():

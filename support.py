@@ -56,6 +56,8 @@ def agentic_query(client, conn, user_input):
     Records: {json.dumps(records, default=str)}
 
     Make it conversational and concise.
+    - If there are any 'blob_url' values, render them as HTML clickable links (<a href="...">...<a>).
+    - Only use safe HTML (no scripts).
     """
     summary_resp = client.chat.completions.create(
         model="gpt-4",

@@ -14,10 +14,22 @@
   <div class="form-card">
     <h3>View Patient</h3>
     <form method="POST">
+      <h4>Search by ID</h4>
       <div class="form-group">
-        <label for="patient_id">Enter Patient ID</label>
-        <input type="number" id="patient_id" name="patient_id" required>
+        <label for="patient_id">Patient ID</label>
+        <input type="number" id="patient_id" name="patient_id">
       </div>
+
+      <h4>Or Search by Name & DOB</h4>
+      <div class="form-group">
+        <label for="name">Patient Name</label>
+        <input type="text" id="name" name="name">
+      </div>
+      <div class="form-group">
+        <label for="dob">Date of Birth</label>
+        <input type="date" id="dob" name="dob">
+      </div>
+
       <button type="submit" class="btn-submit">Search</button>
     </form>
 
